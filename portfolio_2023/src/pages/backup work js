@@ -1,0 +1,141 @@
+
+import { PhotoProvider, PhotoView } from 'react-photo-view';
+import { ASSETS, ANIMATIONS } from './workinfo';
+import './work.css';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import { red } from '@mui/material/colors';
+import React from 'react';
+
+const {
+  useCallback,
+  useState,
+} = React
+
+const CATEGORIES = [
+  "Post",
+  "Animation",
+  "Carousel",
+  'Poster',
+  'Other'
+]
+
+
+function AssetFilters({categories, onFilterChange}) {
+  
+  return (
+    <section>
+       {categories.map(category => (
+        <FormControlLabel control = {<Checkbox sx={{'&.Mui-checked': {color: red[500]}}} onChange={onFilterChange}/>} value = {category}  label = {category} />
+       ))} 
+    </section>
+  )
+}
+
+
+function Asset({asset}) {
+
+  
+  return (
+    <>
+    <div className='projectContainer'>
+        <img src = {require('../assets/Design/' + asset.image)} width={asset.width} height={asset.height}/>
+            <PhotoView src={require('../assets/Design/' + asset.image)}>
+        <div className = "overlay">
+            <div className = 'projectInfo'>
+                <h2>{asset.title}</h2>
+                <p>{asset.description}</p>
+            </div>
+        </div>
+        </PhotoView>
+    </div>
+    </>
+  )
+}
+
+function AssetsList({assets, start , end}) {
+  
+  return (
+    <>
+      {assets.filter(a => a.id >= start && a.id <= end ).map(asset => (
+        <Asset asset={asset} />
+      ))}
+    </>
+  )
+}
+
+
+function AnimationList({animations}) {
+  
+  return (
+    <>
+      {animations.map(animation => (
+        <Animation animation={animation} />
+      ))}
+    </>
+  )
+}
+
+function Animation({animation}) {
+    return(
+            <>
+            <div className='projectContainer'>
+                <video width = {animation.width} controls src = {require('../assets/Animation/' + animation.video)} />
+            </div>
+            </>)
+}
+
+export function App() {
+  const [state, setState] = useState({
+    assets: ASSETS,
+    animations: ANIMATIONS,
+    filters: new Set(),
+  })
+  
+  const handleFilterChange = useCallback(event => {
+    setState(previousState => {
+      let filters = new Set(previousState.filters)
+      let assets = ASSETS
+      let animations = ANIMATIONS
+      
+      if (event.target.checked) {
+        filters.add(event.target.value)
+      } else {
+        filters.delete(event.target.value)
+      }
+      
+      if (filters.size) {
+        assets = assets.filter(asset => {
+          return filters.has(asset.category)
+        })
+      }
+      if (filters.size) {
+        animations = animations.filter(asset => {
+            return filters.has(asset.category)
+        })
+      }
+      
+      return {
+        filters,
+        assets,
+        animations
+      }
+    })
+  }, [setState])
+  
+  return (
+    <>
+    <AssetFilters 
+    categories={CATEGORIES}
+    onFilterChange={handleFilterChange}/>
+    <br/><div className='line'/><br/>
+
+
+    <PhotoProvider>
+    <AssetsList assets={state.assets} start = '0' end = '7'/>
+    <AnimationList animations={state.animations}/>
+    <AssetsList assets={state.assets} start = '8' end = '24'/>
+    </PhotoProvider>
+      </>
+  )
+}
